@@ -74,6 +74,7 @@ public class Simulatore {
 			if(e.getLap()<=bestLap-2){
 				classifica.remove(e.getAnno());
 				posizione.remove(e.getAnno());
+				numPiloti--;
 			}else{
 				for(DriverAndTempi d: tempi){
 					if(d.getAnno().equals(e.getAnno()) && d.getTempo().getLap()==e.getLap()+1){
