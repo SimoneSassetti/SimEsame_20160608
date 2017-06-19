@@ -8,13 +8,18 @@ public class Simulatore {
 	private Map<Year,Integer> classifica;//fanta-punti
 	private PriorityQueue<Evento> coda;
 	private List<DriverAndTempi> tempi;
-	private Map<Year,Integer> posizione;//tiene conto di come varia la posizione durante i giri
-	private int numPiloti=0;;
+	private Map<Integer, List<Year>> posizione;//tiene conto di come varia la posizione durante i giri
+	private int numPiloti=0;
+	private int lastLap;
 	
-	public Simulatore(List<DriverAndTempi> tempi){
+	public Simulatore(List<DriverAndTempi> tempi, int lastLap){
 		this.tempi=tempi;
+		this.lastLap=lastLap;
 		
-		posizione=new HashMap<Year,Integer>();
+		posizione=new HashMap<Integer,List<Year>>();
+		for(int i=1; i<=lastLap;i++){
+			posizione.put(i, new ArrayList<Year>());
+		}
 		classifica=new HashMap<Year,Integer>();
 		
 		for(DriverAndTempi t: tempi){
@@ -42,38 +47,55 @@ public class Simulatore {
 		}
 		Collections.sort(temp,new Comparatore());
 		numPiloti=temp.size();
-		int i=1;
+		
+		List<Year> listaAnni=new ArrayList<Year>();
 		for(DriverAndTempi d: temp){
-			posizione.put(d.getAnno(), i);
-			i++;
+			listaAnni.add(d.getAnno());
 		}
+		posizione.put(1, listaAnni);
 	}
 	
 	public void run(){
-		int contaPassaggi=0;
 		int bestLap=0;//il primo a che giro si trova?
 		
 		while(!coda.isEmpty()){
 			
-			if(contaPassaggi>=numPiloti)
-				contaPassaggi=0;
-			
 			Evento e=coda.poll();
-			contaPassaggi++;
-			if(contaPassaggi==1){
+			
+			Year y=e.getAnno();
+			int lap=e.getLap();
+			List<Year> temp=posizione.get(lap);
+			if(temp.isEmpty()){
 				bestLap=e.getLap();
 			}
-			
-			if(contaPassaggi<posizione.get(e.getAnno())){
+			temp.add(y);
+			int pos=0;
+			for(Year pilota: temp){
+				pos++;
+				if(pilota.compareTo(y)==0){
+					break;
+				}
+			}
+			int trovato=0;
+			if(e.getLap()>1){
+				List<Year> prec=posizione.get(e.getLap()-1);
+				trovato=0;
+				for(Year pilota: prec){
+					trovato++;
+					if(pilota.compareTo(y)==0){
+						break;
+					}
+				}
+			}
+			if(pos<trovato){
 				int punti=classifica.get(e.getAnno());
 				punti+=1;
 				classifica.put(e.getAnno(), punti);
-				posizione.put(e.getAnno(), contaPassaggi);
 			}
 			
 			if(e.getLap()<=bestLap-2){
 				classifica.remove(e.getAnno());
-				posizione.remove(e.getAnno());
+				
 			}else{
 				for(DriverAndTempi d: tempi){
 					if(d.getAnno().equals(e.getAnno()) && d.getTempo().getLap()==e.getLap()+1){

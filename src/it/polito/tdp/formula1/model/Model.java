@@ -45,7 +45,8 @@ public class Model {
 	public Map<Year, Integer> simula(Driver d, Race r) {
 		tempiPilota=dao.getTempiPilota(d,r);
 		
-		Simulatore sim=new Simulatore(tempiPilota);
+		int lastLap=tempiPilota.get(tempiPilota.size()-1).getTempo().getLap();
+		Simulatore sim=new Simulatore(tempiPilota,lastLap);
 		
 		sim.inserisci();
 		sim.run();
